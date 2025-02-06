@@ -1,6 +1,10 @@
+#include <sys/stat.h>
+
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 void parse(const std::string &input, std::string &inst, std::string &seg,
            std::string &index) {
@@ -8,35 +12,7 @@ void parse(const std::string &input, std::string &inst, std::string &seg,
     ss >> inst >> seg >> index;
 }
 
-int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cerr << std::format("Usage: {} <filename>", argv[0]);
-        exit(-1);
-    }
-
-    std::ifstream in(argv[1], std::ios::in);
-    if (!in) {
-        std::cerr << "Cannot open file: " << argv[1] << "\n";
-        exit(-1);
-    }
-
-    std::string pathOut(argv[1]);
-    std::string name = pathOut.substr(0,pathOut.find('.'));
-    pathOut = name + ".asm";
-    size_t t;
-    if((t = name.find_last_of('/')) != std::string::npos) {
-        name = name.substr(t + 1);
-    } else if ((t = name.find_last_of('\\')) != std::string::npos) {
-        name = name.substr(t + 1);
-    }
-
-    std::ofstream out(pathOut, std::ios::out | std::ios::trunc);
-    if (!out) {
-        std::cerr << "Cannot open file: " << pathOut << "\n";
-        in.close();
-        exit(-1);
-    }
-
+void write(std::ifstream &in, std::ofstream &out, std::string &name) {
     std::string s;
     int labelno = 0;
     while (std::getline(in, s)) {
@@ -151,7 +127,7 @@ int main(int argc, char **argv) {
             else {
                 out << "D=M-D\n";
                 out << "@.TRUE" << labelno << "\n";
-                if(inst == "eq")
+                if (inst == "eq")
                     out << "D;JEQ\n";
                 else if (inst == "gt")
                     out << "D;JGT\n";
@@ -168,18 +144,51 @@ int main(int argc, char **argv) {
                 out << "M=-1\n";
                 out << "(.END" << labelno << ")\n";
                 labelno++;
-            } 
+            }
         } else if (inst == "neg" || inst == "not") {
             out << "@SP\n";
             out << "A=M-1\n";
-            if(inst == "neg")
+            if (inst == "neg")
                 out << "M=-M\n";
             else
                 out << "M=!M\n";
         }
     }
     in.close();
-    out.close();
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        std::cerr << std::format("Usage: {} <filename | directory>", argv[0]);
+        exit(-1);
+    }
+
+    std::filesystem::path path(argv[1]);
+    if (std::filesystem::is_regular_file(path)) {
+        std::ifstream in(path, std::ios::in);
+        std::string name = path.stem().string();
+        std::filesystem::path outFile =
+            path.replace_extension("asm");
+        std::ofstream out(outFile, std::ios::out | std::ios::trunc);
+        write(in, out, name);
+        out.close();
+    } else if (std::filesystem::is_directory(path)) {
+        std::filesystem::path outFile = path / "out.asm";
+        outFile.replace_filename(outFile.parent_path().filename());
+        outFile.replace_extension("asm");
+        std::ofstream out(outFile, std::ios::out | std::ios::trunc);
+        for (auto dir_entry : std::filesystem::directory_iterator(path)) {
+            if (dir_entry.path().extension() == ".vm") {
+                std::ifstream in(dir_entry.path(), std::ios::in);
+                std::string name = dir_entry.path().stem().string();
+                write(in, out, name);
+            }
+        }
+        out.close();
+    } else {
+        throw "Invalid input!\n";
+    }
+
     std::cout << "Complete!\n";
     return 0;
 }
