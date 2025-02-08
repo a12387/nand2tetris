@@ -10,7 +10,7 @@ int main(int argc, char **argv){
     }
 
     path p(argv[1]);
-    vector<Token> out;
+    deque<Token> out;
     string outName;
     if(is_regular_file(p)) {
         outName = p.stem().string();

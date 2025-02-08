@@ -1,7 +1,7 @@
 #pragma once
 #include <regex>
 #include <fstream>
-#include <vector>
+#include <deque>
 using namespace std;
 enum TokenType {
     Keyword,
@@ -17,7 +17,7 @@ struct Token {
 class Lexer {
    public:
     Lexer(ifstream &in);
-    void lex(vector<Token> &out);
+    void lex(deque<Token> &out);
 
    private:
     string input;

@@ -8,7 +8,7 @@ using namespace std;
 Lexer::Lexer(ifstream &in) {
     input = string(istreambuf_iterator<char>(in), istreambuf_iterator<char>());
 }
-void Lexer::lex(vector<Token> &out) {
+void Lexer::lex(deque<Token> &out) {
     while (!input.empty()) {
         smatch match;
         if (regex_search(input, match, whiteSpace)) {
