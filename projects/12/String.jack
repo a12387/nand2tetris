@@ -10,54 +10,127 @@
  * string-oriented operations.
  */
 class String {
-
+    field int maxL, L;
+    field Array str;
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
+        let maxL = maxLength + 1;
+        let L = 0;
+        let str = Array.new(maxL);
+        return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
+        do Memory.deAlloc(this);
+        return;
     }
 
     /** Returns the current length of this string. */
     method int length() {
+        return L;
     }
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
+        return str[j];
     }
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
+        let str[j] = c;
+        return;
     }
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
+        let str[L] = c;
+        let L = L + 1;
+        return this;
     }
 
     /** Erases the last character from this string. */
     method void eraseLastChar() {
+        let L = L - 1;
+        return;
     }
 
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
+        var boolean negative;
+        var int i, sum;
+        let i = 0;
+        let negative = false;
+        let sum = 0;
+        while (i < L) {
+            if(str[i] = 45) {
+                let negative = true;
+            }
+            else {
+                if((str[i] < 58) & (str[i] > 47)) {
+                    let sum = sum * 10;
+                    let sum = sum + (str[i] - 48);
+                } else {
+                    let i = L;
+                }
+            }
+            let i = i + 1;
+        }
+        if(negative) {
+            let sum = -sum;
+        }
+        return sum;
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
+        var boolean negative;
+        var int ch, nval;
+        let L = 0;
+        if(val = 0) {
+            let L = 1;
+            let str[0] = 48;
+            return;
+        }
+        if(val < 0) {
+            let negative = true;
+            let val = -val;
+        } else {
+            let negative = false;
+        }
+        while(~(val = 0)) {
+            let nval = val;
+            let val = val / 10;
+            let ch = nval - (val * 10);
+            do appendChar(ch + 48);
+        }
+        if(negative) {
+            do appendChar(45);
+        }
+        let nval = 0;
+        while (nval < (L / 2)) {
+            let ch = str[nval];
+            let str[nval] = str[L - nval - 1];
+            let str[L - nval - 1] = ch;
+            let nval = nval + 1; 
+        }
+        return;
     }
 
     /** Returns the new line character. */
     function char newLine() {
+        return 128;
     }
 
     /** Returns the backspace character. */
     function char backSpace() {
+        return 129;
     }
 
     /** Returns the double quote (") character. */
     function char doubleQuote() {
+        return 34;
     }
 }
